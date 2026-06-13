@@ -1,793 +1,722 @@
 --[[
- .____                  ________ ___.    _____                           __                
- |    |    __ _______   \_____  \\_ |___/ ____\_ __  ______ ____ _____ _/  |_  ___________ 
- |    |   |  |  \__  \   /   |   \| __ \   __\  |  \/  ___// ___\\__  \\   __\/  _ \_  __ \
- |    |___|  |  // __ \_/    |    \ \_\ \  | |  |  /\___ \\  \___ / __ \|  | (  <_> )  | \/
- |_______ \____/(____  /\_______  /___  /__| |____//____  >\___  >____  /__|  \____/|__|   
-         \/          \/         \/    \/                \/     \/     \/                   
-          \_Welcome to LuaObfuscator.com   (Alpha 0.10.9) ~  Much Love, Ferib 
+    SCRIPT: AMY HUB V3 - SOLARA TABBED EDITION (PRO MAX)
+    DEVELOPER: ADHAM_M_YT 😎😉 (Founder)
+    ASSISTANT: AMY_1 🤫 (Tabbed Native UI - Dynamic Color & Physics Bypass)
+    STATUS: UNDETECTED & FORCE PHYSICS ENABLED
+]]
 
-]]--
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+local Camera = workspace.CurrentCamera
+local LP = Players.LocalPlayer
 
-local Players = game:GetService("Players");
-local RunService = game:GetService("RunService");
-local UserInputService = game:GetService("UserInputService");
-local Camera = workspace.CurrentCamera;
-local LP = Players.LocalPlayer;
-local username = LP.Name;
-local Settings = {SafeMode=true,Aimbot=false,IsAiming=false,WallCheck=true,WalkSpeed=16,EnableSpeed=false,JumpPower=50,EnableJump=false,InfJump=false,Noclip=false,Spinbot=false,SpinSpeed=50,PlayerESP=false,CustomHeightOffset=50,AirWalkToggle=false,EnemyHitboxColor=Color3.fromRGB(0, 255, 200)};
-local NPCCache = {};
-local TargetAirWalkY = 0;
+-- [ نظام الألوان الديناميكي ]
+-- بيختار لون عشوائي فخم كل مرة تشغل فيها السكربت لضمان شكل احترافي مختلف
+local RandomHue = math.random()
+local ThemeColor = Color3.fromHSV(RandomHue, 0.85, 0.95)
+
+-- [ إعدادات السكربت الشاملة ]
+local Settings = {
+    SafeMode = true,
+    Aimbot = false,
+    IsAiming = false,
+    WallCheck = true,
+    
+    -- إعدادات الحركة الجديدة (Physics Bypass)
+    WalkSpeed = 50,
+    EnableSpeed = false,
+    JumpPower = 100,
+    EnableJump = false,
+    InfJump = false,
+    Noclip = false,
+    
+    -- إعدادات الطيران والدوران
+    Spinbot = false,
+    SpinSpeed = 50,
+    AirWalkToggle = false,
+    CustomHeightOffset = 50,
+    RealFly = false,
+    FlySpeed = 100,
+    
+    -- إعدادات الرادار والاستهداف
+    PlayerESP = false,
+    EnemyHitboxColor = ThemeColor,
+    CurrentTarget = nil,
+    Spectating = false,
+    SittingOnHead = false,
+    Flinging = false
+}
+
+local NPCCache = {}
+local TargetAirWalkY = 0
+
+-- [ دوال أساسية ومساعدة ]
 local function GetRandomName()
-	local FlatIdent_76979 = 0;
-	local str;
-	while true do
-		if (FlatIdent_76979 == 1) then
-			return str;
-		end
-		if (FlatIdent_76979 == 0) then
-			str = "";
-			for i = 1, math.random(10, 15) do
-				str = str .. string.char(math.random(97, 122));
-			end
-			FlatIdent_76979 = 1;
-		end
-	end
+    local str = ""
+    for i = 1, math.random(15, 25) do 
+        str = str .. string.char(math.random(97, 122)) 
+    end
+    return str
 end
-local AirPlatform = Instance.new("Part");
-AirPlatform.Name = GetRandomName();
-AirPlatform.Size = Vector3.new(15, 1, 15);
-AirPlatform.Anchored = true;
-AirPlatform.CanCollide = true;
-AirPlatform.Transparency = 0.6;
-AirPlatform.Material = Enum.Material.ForceField;
-AirPlatform.Color = Color3.fromRGB(0, 255, 255);
-AirPlatform.Parent = nil;
-local function ShowNotification(title, text, duration, isWarning)
-	local FlatIdent_24A02 = 0;
-	local ScreenGuiNotif;
-	local notifFrame;
-	local titleLabel;
-	local msgLabel;
-	while true do
-		if (FlatIdent_24A02 == 3) then
-			titleLabel.TextXAlignment = Enum.TextXAlignment.Left;
-			msgLabel = Instance.new("TextLabel", notifFrame);
-			msgLabel.Size = UDim2.new(1, -10, 0, 30);
-			msgLabel.Position = UDim2.new(0, 10, 0, 30);
-			msgLabel.BackgroundTransparency = 1;
-			msgLabel.Text = text;
-			FlatIdent_24A02 = 4;
-		end
-		if (FlatIdent_24A02 == 4) then
-			msgLabel.TextColor3 = Color3.fromRGB(220, 220, 220);
-			msgLabel.Font = Enum.Font.Gotham;
-			msgLabel.TextSize = 12;
-			msgLabel.TextWrapped = true;
-			msgLabel.TextXAlignment = Enum.TextXAlignment.Left;
-			game:GetService("TweenService"):Create(notifFrame, TweenInfo.new(0.5), {Position=UDim2.new(1, -340, 0, 10)}):Play();
-			FlatIdent_24A02 = 5;
-		end
-		if (FlatIdent_24A02 == 1) then
-			notifFrame.BackgroundColor3 = (isWarning and Color3.fromRGB(80, 30, 30)) or Color3.fromRGB(30, 30, 45);
-			notifFrame.BorderSizePixel = 0;
-			Instance.new("UICorner", notifFrame).CornerRadius = UDim.new(0, 8);
-			notifFrame.Parent = ScreenGuiNotif;
-			titleLabel = Instance.new("TextLabel", notifFrame);
-			titleLabel.Size = UDim2.new(1, -10, 0, 25);
-			FlatIdent_24A02 = 2;
-		end
-		if (FlatIdent_24A02 == 5) then
-			wait(duration or 4);
-			game:GetService("TweenService"):Create(notifFrame, TweenInfo.new(0.5), {Position=UDim2.new(1, 0, 0, 10)}):Play();
-			wait(0.5);
-			notifFrame:Destroy();
-			break;
-		end
-		if (2 == FlatIdent_24A02) then
-			titleLabel.Position = UDim2.new(0, 10, 0, 5);
-			titleLabel.BackgroundTransparency = 1;
-			titleLabel.Text = title;
-			titleLabel.TextColor3 = (isWarning and Color3.fromRGB(255, 100, 100)) or Color3.fromRGB(0, 255, 200);
-			titleLabel.Font = Enum.Font.GothamBold;
-			titleLabel.TextSize = 14;
-			FlatIdent_24A02 = 3;
-		end
-		if (FlatIdent_24A02 == 0) then
-			ScreenGuiNotif = nil;
-			pcall(function()
-				ScreenGuiNotif = (gethui and gethui()) or game:GetService("CoreGui");
-			end);
-			if not ScreenGuiNotif then
-				ScreenGuiNotif = LP:WaitForChild("PlayerGui");
-			end
-			notifFrame = Instance.new("Frame");
-			notifFrame.Size = UDim2.new(0, 320, 0, 60);
-			notifFrame.Position = UDim2.new(1, -340, 0, 10);
-			FlatIdent_24A02 = 1;
-		end
-	end
+
+local function FindPlayerByString(str)
+    if not str or str == "" then return nil end
+    str = string.lower(str)
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LP then
+            local playerName = string.lower(p.Name)
+            local displayName = string.lower(p.DisplayName)
+            if string.sub(playerName, 1, #str) == str or string.sub(displayName, 1, #str) == str then
+                return p
+            end
+        end
+    end
+    return nil
 end
+
+-- منصة الطيران القديمة
+local AirPlatform = Instance.new("Part")
+AirPlatform.Name = GetRandomName()
+AirPlatform.Size = Vector3.new(15, 1, 15)
+AirPlatform.Anchored = true
+AirPlatform.CanCollide = true
+AirPlatform.Transparency = 0.6
+AirPlatform.Material = Enum.Material.ForceField
+AirPlatform.Color = ThemeColor
+AirPlatform.Parent = nil
+
+-- [ الأنظمة الخلفية للرادار ]
 task.spawn(function()
-	while task.wait(3) do
-		local tempCache = {};
-		pcall(function()
-			for _, obj in pairs(workspace:GetDescendants()) do
-				if (obj:IsA("Model") and obj:FindFirstChild("Humanoid") and obj:FindFirstChild("HumanoidRootPart")) then
-					if (not Players:GetPlayerFromCharacter(obj) and (obj.Humanoid.Health > 0)) then
-						table.insert(tempCache, obj);
-					end
-				end
-			end
-		end);
-		NPCCache = tempCache;
-	end
-end);
+    while task.wait(3) do
+        local tempCache = {}
+        pcall(function()
+            for _, obj in pairs(workspace:GetDescendants()) do
+                if obj:IsA("Model") and obj:FindFirstChild("Humanoid") and obj:FindFirstChild("HumanoidRootPart") then
+                    if not Players:GetPlayerFromCharacter(obj) and obj.Humanoid.Health > 0 then
+                        table.insert(tempCache, obj)
+                    end
+                end
+            end
+        end)
+        NPCCache = tempCache
+    end
+end)
+
 local function GetValidTargets()
-	local targets = {};
-	for _, p in pairs(Players:GetPlayers()) do
-		if ((p ~= LP) and p.Character) then
-			table.insert(targets, {Character=p.Character,Name=p.Name});
-		end
-	end
-	return targets;
+    local targets = {}
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LP and p.Character then 
+            table.insert(targets, {Character = p.Character, Name = p.Name}) 
+        end
+    end
+    return targets
 end
+
+-- رادار الأعداء
 local function CreateGunSlayerESP(target, name, color)
-	if target:FindFirstChild("AMY_ESP_MARKER") then
-		return;
-	end
-	local marker = Instance.new("BoolValue", target);
-	marker.Name = "AMY_ESP_MARKER";
-	local billboard = Instance.new("BillboardGui");
-	billboard.Name = GetRandomName();
-	billboard.Adornee = target;
-	billboard.AlwaysOnTop = true;
-	billboard.Size = UDim2.new(0, 180, 0, 100);
-	billboard.StudsOffset = Vector3.new(0, 3.5, 0);
-	local nameLabel = Instance.new("TextLabel", billboard);
-	nameLabel.Size = UDim2.new(1, 0, 0.25, 0);
-	nameLabel.Text = "[ " .. name .. " ]";
-	nameLabel.TextColor3 = color;
-	nameLabel.Font = Enum.Font.GothamBold;
-	nameLabel.TextScaled = true;
-	nameLabel.BackgroundTransparency = 1;
-	nameLabel.TextStrokeTransparency = 0.2;
-	pcall(function()
-		billboard.Parent = game:GetService("CoreGui");
-	end);
+    if target:FindFirstChild("AMY_ESP_MARKER") then return end
+    local marker = Instance.new("BoolValue", target) 
+    marker.Name = "AMY_ESP_MARKER"
+    
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = GetRandomName() 
+    billboard.Adornee = target 
+    billboard.AlwaysOnTop = true
+    billboard.Size = UDim2.new(0, 180, 0, 100) 
+    billboard.StudsOffset = Vector3.new(0, 3.5, 0)
+    
+    local nameLabel = Instance.new("TextLabel", billboard)
+    nameLabel.Size = UDim2.new(1, 0, 0.25, 0) 
+    nameLabel.Text = "[ " .. name .. " ]"
+    nameLabel.TextColor3 = color 
+    nameLabel.Font = Enum.Font.GothamBold 
+    nameLabel.TextScaled = true
+    nameLabel.BackgroundTransparency = 1 
+    nameLabel.TextStrokeTransparency = 0.2
+    
+    pcall(function() billboard.Parent = CoreGui end)
 end
-local ScreenGui = Instance.new("ScreenGui");
-ScreenGui.Name = GetRandomName();
-ScreenGui.ResetOnSpawn = false;
-pcall(function()
-	ScreenGui.Parent = (gethui and gethui()) or game:GetService("CoreGui");
-end);
-if not ScreenGui.Parent then
-	ScreenGui.Parent = LP:WaitForChild("PlayerGui");
+
+-- [ بناء الواجهة بنظام التابات الديناميكي ]
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = GetRandomName()
+ScreenGui.ResetOnSpawn = false
+pcall(function() ScreenGui.Parent = (gethui and gethui()) or CoreGui end)
+if not ScreenGui.Parent then ScreenGui.Parent = LP:WaitForChild("PlayerGui") end
+
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, 560, 0, 420)
+MainFrame.Position = UDim2.new(0.5, -280, 0.4, -210)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
+
+-- تغيير لون الإطار للون العشوائي
+local UIStroke = Instance.new("UIStroke", MainFrame)
+UIStroke.Color = ThemeColor 
+UIStroke.Thickness = 2.5
+
+-- شريط العنوان
+local TopBar = Instance.new("Frame", MainFrame)
+TopBar.Size = UDim2.new(1, 0, 0, 40)
+TopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 30)
+TopBar.BorderSizePixel = 0
+Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 10)
+
+local Title = Instance.new("TextLabel", TopBar)
+Title.Size = UDim2.new(0.7, 0, 1, 0) 
+Title.Position = UDim2.new(0.03, 0, 0, 0)
+Title.Text = "🔹 AMY HUB V3 [BETA] 🔹"
+Title.TextColor3 = ThemeColor
+Title.Font = Enum.Font.GothamBold 
+Title.TextSize = 16 
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.BackgroundTransparency = 1
+
+-- قسم التابات (يسار)
+local TabContainer = Instance.new("ScrollingFrame", MainFrame)
+TabContainer.Size = UDim2.new(0, 150, 1, -50)
+TabContainer.Position = UDim2.new(0, 10, 0, 45)
+TabContainer.BackgroundTransparency = 1
+TabContainer.ScrollBarThickness = 2
+local TabList = Instance.new("UIListLayout", TabContainer)
+TabList.Padding = UDim.new(0, 5)
+
+-- قسم المحتوى (يمين)
+local PageContainer = Instance.new("Frame", MainFrame)
+PageContainer.Size = UDim2.new(1, -175, 1, -50)
+PageContainer.Position = UDim2.new(0, 165, 0, 45)
+PageContainer.BackgroundTransparency = 1
+
+local ActivePage = nil
+local ActiveTabBtn = nil
+
+-- [ دوال صناعة الواجهة ]
+local function CreateTab(name)
+    local TabBtn = Instance.new("TextButton", TabContainer)
+    TabBtn.Size = UDim2.new(1, -5, 0, 35)
+    TabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    TabBtn.Text = name
+    TabBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
+    TabBtn.Font = Enum.Font.GothamBold
+    TabBtn.TextSize = 13
+    Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 6)
+
+    local Page = Instance.new("ScrollingFrame", PageContainer)
+    Page.Size = UDim2.new(1, 0, 1, 0)
+    Page.BackgroundTransparency = 1
+    Page.ScrollBarThickness = 4
+    Page.ScrollBarImageColor3 = ThemeColor
+    Page.Visible = false
+    local PageList = Instance.new("UIListLayout", Page)
+    PageList.Padding = UDim.new(0, 8)
+    PageList.SortOrder = Enum.SortOrder.LayoutOrder
+
+    TabBtn.MouseButton1Click:Connect(function()
+        if ActivePage then ActivePage.Visible = false end
+        if ActiveTabBtn then 
+            ActiveTabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+            ActiveTabBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
+        end
+        Page.Visible = true
+        TabBtn.BackgroundColor3 = ThemeColor
+        TabBtn.TextColor3 = Color3.fromRGB(15, 15, 20)
+        ActivePage = Page
+        ActiveTabBtn = TabBtn
+    end)
+
+    if not ActivePage then
+        Page.Visible = true
+        TabBtn.BackgroundColor3 = ThemeColor
+        TabBtn.TextColor3 = Color3.fromRGB(15, 15, 20)
+        ActivePage = Page
+        ActiveTabBtn = TabBtn
+    end
+
+    return Page
 end
-local MainFrame = Instance.new("Frame", ScreenGui);
-MainFrame.Size = UDim2.new(0, 550, 0, 400);
-MainFrame.Position = UDim2.new(0.5, -275, 0.4, -200);
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20);
-MainFrame.BorderSizePixel = 0;
-MainFrame.Active = true;
-MainFrame.Draggable = true;
-Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10);
-local UIStroke = Instance.new("UIStroke", MainFrame);
-UIStroke.Color = Color3.fromRGB(0, 255, 200);
-UIStroke.Thickness = 1.5;
-local TopBar = Instance.new("Frame", MainFrame);
-TopBar.Size = UDim2.new(1, 0, 0, 45);
-TopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 30);
-TopBar.BorderSizePixel = 0;
-Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 10);
-local Title = Instance.new("TextLabel", TopBar);
-Title.Size = UDim2.new(0.5, 0, 1, 0);
-Title.Position = UDim2.new(0.03, 0, 0, 0);
-Title.Text = "★ AMY HUB V3 | BETA ★";
-Title.TextColor3 = Color3.fromRGB(0, 255, 200);
-Title.Font = Enum.Font.GothamBold;
-Title.TextSize = 15;
-Title.TextXAlignment = Enum.TextXAlignment.Left;
-Title.BackgroundTransparency = 1;
-local UsernameLabel = Instance.new("TextLabel", TopBar);
-UsernameLabel.Size = UDim2.new(0.45, 0, 1, 0);
-UsernameLabel.Position = UDim2.new(0.55, 0, 0, 0);
-UsernameLabel.Text = "👤 " .. username;
-UsernameLabel.TextColor3 = Color3.fromRGB(180, 180, 200);
-UsernameLabel.Font = Enum.Font.Gotham;
-UsernameLabel.TextSize = 13;
-UsernameLabel.TextXAlignment = Enum.TextXAlignment.Right;
-UsernameLabel.BackgroundTransparency = 1;
-local TabContainer = Instance.new("ScrollingFrame", MainFrame);
-TabContainer.Size = UDim2.new(0, 150, 1, -60);
-TabContainer.Position = UDim2.new(0, 10, 0, 55);
-TabContainer.BackgroundTransparency = 1;
-TabContainer.ScrollBarThickness = 2;
-local TabList = Instance.new("UIListLayout", TabContainer);
-TabList.Padding = UDim.new(0, 5);
-local PageContainer = Instance.new("Frame", MainFrame);
-PageContainer.Size = UDim2.new(1, -180, 1, -60);
-PageContainer.Position = UDim2.new(0, 170, 0, 55);
-PageContainer.BackgroundTransparency = 1;
-local ActivePage = nil;
-local ActiveTabBtn = nil;
-local function CreateTab(name, icon)
-	local FlatIdent_8199B = 0;
-	local TabBtn;
-	local Page;
-	local PageList;
-	while true do
-		if (FlatIdent_8199B == 1) then
-			TabBtn.Text = icon .. "  " .. name;
-			TabBtn.TextColor3 = Color3.fromRGB(150, 150, 150);
-			TabBtn.Font = Enum.Font.GothamBold;
-			FlatIdent_8199B = 2;
-		end
-		if (FlatIdent_8199B == 4) then
-			Page.ScrollBarThickness = 4;
-			Page.ScrollBarImageColor3 = Color3.fromRGB(0, 255, 200);
-			Page.Visible = false;
-			FlatIdent_8199B = 5;
-		end
-		if (FlatIdent_8199B == 2) then
-			TabBtn.TextSize = 13;
-			TabBtn.TextXAlignment = Enum.TextXAlignment.Left;
-			Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 6);
-			FlatIdent_8199B = 3;
-		end
-		if (5 == FlatIdent_8199B) then
-			PageList = Instance.new("UIListLayout", Page);
-			PageList.Padding = UDim.new(0, 8);
-			PageList.SortOrder = Enum.SortOrder.LayoutOrder;
-			FlatIdent_8199B = 6;
-		end
-		if (6 == FlatIdent_8199B) then
-			TabBtn.MouseButton1Click:Connect(function()
-				local FlatIdent_A9A3 = 0;
-				while true do
-					if (FlatIdent_A9A3 == 0) then
-						if ActivePage then
-							ActivePage.Visible = false;
-						end
-						if ActiveTabBtn then
-							local FlatIdent_2AC68 = 0;
-							while true do
-								if (FlatIdent_2AC68 == 0) then
-									ActiveTabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 30);
-									ActiveTabBtn.TextColor3 = Color3.fromRGB(150, 150, 150);
-									break;
-								end
-							end
-						end
-						FlatIdent_A9A3 = 1;
-					end
-					if (1 == FlatIdent_A9A3) then
-						Page.Visible = true;
-						TabBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 200);
-						FlatIdent_A9A3 = 2;
-					end
-					if (FlatIdent_A9A3 == 2) then
-						TabBtn.TextColor3 = Color3.fromRGB(15, 15, 20);
-						ActivePage = Page;
-						FlatIdent_A9A3 = 3;
-					end
-					if (FlatIdent_A9A3 == 3) then
-						ActiveTabBtn = TabBtn;
-						break;
-					end
-				end
-			end);
-			if not ActivePage then
-				Page.Visible = true;
-				TabBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 200);
-				TabBtn.TextColor3 = Color3.fromRGB(15, 15, 20);
-				ActivePage = Page;
-				ActiveTabBtn = TabBtn;
-			end
-			return Page;
-		end
-		if (FlatIdent_8199B == 3) then
-			Page = Instance.new("ScrollingFrame", PageContainer);
-			Page.Size = UDim2.new(1, 0, 1, 0);
-			Page.BackgroundTransparency = 1;
-			FlatIdent_8199B = 4;
-		end
-		if (FlatIdent_8199B == 0) then
-			TabBtn = Instance.new("TextButton", TabContainer);
-			TabBtn.Size = UDim2.new(1, -5, 0, 40);
-			TabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 30);
-			FlatIdent_8199B = 1;
-		end
-	end
+
+local function CreateLabel(page, text)
+    local Frame = Instance.new("Frame", page)
+    Frame.Size = UDim2.new(1, -10, 0, 30)
+    Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6)
+    
+    local Label = Instance.new("TextLabel", Frame)
+    Label.Size = UDim2.new(1, -20, 1, 0) 
+    Label.Position = UDim2.new(0, 10, 0, 0)
+    Label.Text = text 
+    Label.TextColor3 = Color3.fromRGB(200, 200, 200)
+    Label.Font = Enum.Font.Gotham 
+    Label.TextSize = 12 
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.BackgroundTransparency = 1
+    return Label
 end
+
 local function CreateToggle(page, name, default, callback)
-	local FlatIdent_1B51D = 0;
-	local Frame;
-	local Label;
-	local Btn;
-	local state;
-	while true do
-		if (FlatIdent_1B51D == 2) then
-			Label.TextColor3 = Color3.fromRGB(230, 230, 230);
-			Label.Font = Enum.Font.Gotham;
-			Label.TextSize = 12;
-			Label.TextXAlignment = Enum.TextXAlignment.Left;
-			FlatIdent_1B51D = 3;
-		end
-		if (FlatIdent_1B51D == 0) then
-			Frame = Instance.new("Frame", page);
-			Frame.Size = UDim2.new(1, -10, 0, 38);
-			Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35);
-			Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6);
-			FlatIdent_1B51D = 1;
-		end
-		if (FlatIdent_1B51D == 4) then
-			Btn.BackgroundColor3 = (default and Color3.fromRGB(0, 255, 200)) or Color3.fromRGB(50, 50, 60);
-			Btn.Text = "";
-			Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 12);
-			state = default;
-			FlatIdent_1B51D = 5;
-		end
-		if (FlatIdent_1B51D == 1) then
-			Label = Instance.new("TextLabel", Frame);
-			Label.Size = UDim2.new(0.7, 0, 1, 0);
-			Label.Position = UDim2.new(0.05, 0, 0, 0);
-			Label.Text = name;
-			FlatIdent_1B51D = 2;
-		end
-		if (FlatIdent_1B51D == 5) then
-			Btn.MouseButton1Click:Connect(function()
-				local FlatIdent_39764 = 0;
-				while true do
-					if (FlatIdent_39764 == 0) then
-						state = not state;
-						Btn.BackgroundColor3 = (state and Color3.fromRGB(0, 255, 200)) or Color3.fromRGB(50, 50, 60);
-						FlatIdent_39764 = 1;
-					end
-					if (FlatIdent_39764 == 1) then
-						callback(state);
-						break;
-					end
-				end
-			end);
-			break;
-		end
-		if (FlatIdent_1B51D == 3) then
-			Label.BackgroundTransparency = 1;
-			Btn = Instance.new("TextButton", Frame);
-			Btn.Size = UDim2.new(0, 45, 0, 24);
-			Btn.Position = UDim2.new(1, -55, 0.15, 0);
-			FlatIdent_1B51D = 4;
-		end
-	end
+    local Frame = Instance.new("Frame", page)
+    Frame.Size = UDim2.new(1, -10, 0, 38)
+    Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6)
+    
+    local Label = Instance.new("TextLabel", Frame)
+    Label.Size = UDim2.new(0.7, 0, 1, 0) 
+    Label.Position = UDim2.new(0.05, 0, 0, 0)
+    Label.Text = name 
+    Label.TextColor3 = Color3.fromRGB(230, 230, 230)
+    Label.Font = Enum.Font.Gotham 
+    Label.TextSize = 12 
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.BackgroundTransparency = 1
+    
+    local Btn = Instance.new("TextButton", Frame)
+    Btn.Size = UDim2.new(0, 45, 0, 24) 
+    Btn.Position = UDim2.new(1, -55, 0.15, 0)
+    Btn.BackgroundColor3 = default and ThemeColor or Color3.fromRGB(50, 50, 60)
+    Btn.Text = "" 
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 12)
+    
+    local state = default
+    Btn.MouseButton1Click:Connect(function()
+        state = not state
+        Btn.BackgroundColor3 = state and ThemeColor or Color3.fromRGB(50, 50, 60)
+        callback(state)
+    end)
 end
+
 local function CreateSlider(page, name, min, max, default, callback)
-	local FlatIdent_35A31 = 0;
-	local Frame;
-	local Label;
-	local Bar;
-	local Fill;
-	local moving;
-	while true do
-		if (6 == FlatIdent_35A31) then
-			Instance.new("UICorner", Bar).CornerRadius = UDim.new(0, 3);
-			Fill = Instance.new("Frame", Bar);
-			Fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0);
-			FlatIdent_35A31 = 7;
-		end
-		if (FlatIdent_35A31 == 1) then
-			Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6);
-			Label = Instance.new("TextLabel", Frame);
-			Label.Size = UDim2.new(0.5, 0, 0.5, 0);
-			FlatIdent_35A31 = 2;
-		end
-		if (5 == FlatIdent_35A31) then
-			Bar.Position = UDim2.new(0.05, 0, 0.65, 0);
-			Bar.BackgroundColor3 = Color3.fromRGB(40, 40, 50);
-			Bar.Text = "";
-			FlatIdent_35A31 = 6;
-		end
-		if (FlatIdent_35A31 == 2) then
-			Label.Position = UDim2.new(0.05, 0, 0, 0);
-			Label.Text = name .. " : " .. tostring(default);
-			Label.TextColor3 = Color3.fromRGB(230, 230, 230);
-			FlatIdent_35A31 = 3;
-		end
-		if (FlatIdent_35A31 == 4) then
-			Label.BackgroundTransparency = 1;
-			Bar = Instance.new("TextButton", Frame);
-			Bar.Size = UDim2.new(0.9, 0, 0, 6);
-			FlatIdent_35A31 = 5;
-		end
-		if (FlatIdent_35A31 == 3) then
-			Label.Font = Enum.Font.Gotham;
-			Label.TextSize = 12;
-			Label.TextXAlignment = Enum.TextXAlignment.Left;
-			FlatIdent_35A31 = 4;
-		end
-		if (FlatIdent_35A31 == 7) then
-			Fill.BackgroundColor3 = Color3.fromRGB(0, 255, 200);
-			Instance.new("UICorner", Fill).CornerRadius = UDim.new(0, 3);
-			moving = false;
-			FlatIdent_35A31 = 8;
-		end
-		if (FlatIdent_35A31 == 8) then
-			Bar.InputBegan:Connect(function(i)
-				if (i.UserInputType == Enum.UserInputType.MouseButton1) then
-					moving = true;
-				end
-			end);
-			UserInputService.InputEnded:Connect(function(i)
-				if (i.UserInputType == Enum.UserInputType.MouseButton1) then
-					moving = false;
-				end
-			end);
-			UserInputService.InputChanged:Connect(function(i)
-				if (moving and (i.UserInputType == Enum.UserInputType.MouseMovement)) then
-					local FlatIdent_6C033 = 0;
-					local pct;
-					local val;
-					while true do
-						if (FlatIdent_6C033 == 2) then
-							callback(val);
-							break;
-						end
-						if (0 == FlatIdent_6C033) then
-							pct = math.clamp((UserInputService:GetMouseLocation().X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1);
-							Fill.Size = UDim2.new(pct, 0, 1, 0);
-							FlatIdent_6C033 = 1;
-						end
-						if (FlatIdent_6C033 == 1) then
-							val = math.floor(min + ((max - min) * pct));
-							Label.Text = name .. " : " .. tostring(val);
-							FlatIdent_6C033 = 2;
-						end
-					end
-				end
-			end);
-			break;
-		end
-		if (FlatIdent_35A31 == 0) then
-			Frame = Instance.new("Frame", page);
-			Frame.Size = UDim2.new(1, -10, 0, 48);
-			Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35);
-			FlatIdent_35A31 = 1;
-		end
-	end
+    local Frame = Instance.new("Frame", page)
+    Frame.Size = UDim2.new(1, -10, 0, 48)
+    Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6)
+    
+    local Label = Instance.new("TextLabel", Frame)
+    Label.Size = UDim2.new(0.5, 0, 0.5, 0) 
+    Label.Position = UDim2.new(0.05, 0, 0, 0)
+    Label.Text = name .. " : " .. tostring(default) 
+    Label.TextColor3 = Color3.fromRGB(230, 230, 230)
+    Label.Font = Enum.Font.Gotham 
+    Label.TextSize = 12 
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.BackgroundTransparency = 1
+    
+    local Bar = Instance.new("TextButton", Frame)
+    Bar.Size = UDim2.new(0.9, 0, 0, 6) 
+    Bar.Position = UDim2.new(0.05, 0, 0.65, 0)
+    Bar.BackgroundColor3 = Color3.fromRGB(40, 40, 50) 
+    Bar.Text = ""
+    Instance.new("UICorner", Bar).CornerRadius = UDim.new(0, 3)
+    
+    local Fill = Instance.new("Frame", Bar)
+    Fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+    Fill.BackgroundColor3 = ThemeColor
+    Instance.new("UICorner", Fill).CornerRadius = UDim.new(0, 3)
+    
+    local moving = false
+    Bar.InputBegan:Connect(function(i) 
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then moving = true end 
+    end)
+    UserInputService.InputEnded:Connect(function(i) 
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then moving = false end 
+    end)
+    UserInputService.InputChanged:Connect(function(i)
+        if moving and i.UserInputType == Enum.UserInputType.MouseMovement then
+            local pct = math.clamp((UserInputService:GetMouseLocation().X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
+            Fill.Size = UDim2.new(pct, 0, 1, 0)
+            local val = math.floor(min + (max - min) * pct)
+            Label.Text = name .. " : " .. tostring(val)
+            callback(val)
+        end
+    end)
 end
-local TabSafe = CreateTab("Protection", "🛡️");
-local TabCombat = CreateTab("Combat", "🎯");
-local TabVisuals = CreateTab("Visuals", "👁️");
-local TabMovement = CreateTab("Movement", "🏃");
-local TabCrazy = CreateTab("Exploits", "🌪️");
-local TabInfo = CreateTab("Information", "ℹ️");
+
+local function CreateTextBox(page, placeholder, callback)
+    local Frame = Instance.new("Frame", page)
+    Frame.Size = UDim2.new(1, -10, 0, 40)
+    Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6)
+    
+    local TextBox = Instance.new("TextBox", Frame)
+    TextBox.Size = UDim2.new(1, -20, 1, 0)
+    TextBox.Position = UDim2.new(0, 10, 0, 0)
+    TextBox.BackgroundTransparency = 1
+    TextBox.Text = ""
+    TextBox.PlaceholderText = placeholder
+    TextBox.TextColor3 = ThemeColor
+    TextBox.Font = Enum.Font.GothamBold
+    TextBox.TextSize = 14
+    TextBox.ClearTextOnFocus = false
+    
+    TextBox.FocusLost:Connect(function()
+        callback(TextBox.Text)
+    end)
+    return TextBox
+end
+
+local function CreateButton(page, text, callback)
+    local Btn = Instance.new("TextButton", page)
+    Btn.Size = UDim2.new(1, -10, 0, 35)
+    Btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    Btn.Text = text
+    Btn.TextColor3 = Color3.fromRGB(230, 230, 230)
+    Btn.Font = Enum.Font.GothamBold
+    Btn.TextSize = 13
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
+    
+    local stroke = Instance.new("UIStroke", Btn)
+    stroke.Color = ThemeColor
+    stroke.Thickness = 1
+    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    
+    Btn.MouseButton1Click:Connect(callback)
+end
+
+-- [ إضافة التابات والميزات ]
+
+local TabInfo = CreateTab("ℹ️ Info & Msgs")
+local TabSafe = CreateTab("🛡️ Protection")
+local TabCombat = CreateTab("🎯 Combat")
+local TabMovement = CreateTab("🏃 Movement")
+local TabTarget = CreateTab("🎯 Target & Fly") 
+local TabVisuals = CreateTab("👁️ Visuals")
+local TabCrazy = CreateTab("🌪️ Exploits")
+
+-- Info Tab
+CreateLabel(TabInfo, "مرحباً بك في AMY HUB V3")
+CreateLabel(TabInfo, "المطور: ADHAM_M_YT 😎😉")
+CreateLabel(TabInfo, "الحالة: جاهز للدمار ✅ (Physics Bypass)")
+CreateLabel(TabInfo, "----------------------------------")
+CreateLabel(TabInfo, "آخر التحديثات الجبارة:")
+CreateLabel(TabInfo, "> تم تخطي حماية الألعاب للسرعة والقفز بالفيزياء.")
+CreateLabel(TabInfo, "> إضافة نظام ألوان متغيرة.")
+CreateLabel(TabInfo, "> إضافة نظام استهداف اللاعبين الجديد بالكامل.")
+
+-- Protection Tab
 CreateToggle(TabSafe, "تفعيل الحماية (Safe Mode)", true, function(v)
-	Settings.SafeMode = v;
-	if v then
-		local FlatIdent_5F1CB = 0;
-		while true do
-			if (FlatIdent_5F1CB == 0) then
-				Settings.Noclip = false;
-				Settings.EnableSpeed = false;
-				FlatIdent_5F1CB = 1;
-			end
-			if (FlatIdent_5F1CB == 2) then
-				AirPlatform.Parent = nil;
-				ShowNotification("✅ الحماية", "تم تفعيل وضع الحماية الآمن!", 3, false);
-				break;
-			end
-			if (FlatIdent_5F1CB == 1) then
-				Settings.Spinbot = false;
-				Settings.AirWalkToggle = false;
-				FlatIdent_5F1CB = 2;
-			end
-		end
-	else
-		ShowNotification("⚠️ تحذير أمني ⚠️", "لقد قفلت حماية السكربت! نحن غير مسؤولين تمامًا عن أي شيء يحدث.", 5, true);
-	end
-end);
-CreateToggle(TabCombat, "Aimbot Main (الإيمبوت)", false, function(v)
-	Settings.Aimbot = v;
-end);
-CreateToggle(TabCombat, "Wall Check (فحص الجدران)", true, function(v)
-	Settings.WallCheck = v;
-end);
-CreateToggle(TabVisuals, "رادار الأعداء (ESP)", false, function(v)
-	Settings.PlayerESP = v;
-end);
-CreateToggle(TabMovement, "تفعيل سرعة المشي", false, function(v)
-	Settings.EnableSpeed = v;
-end);
-CreateSlider(TabMovement, "سرعة المشي (Speed)", 16, 250, 50, function(v)
-	Settings.WalkSpeed = v;
-end);
-CreateToggle(TabMovement, "تفعيل قوة القفز", false, function(v)
-	Settings.EnableJump = v;
-end);
-CreateSlider(TabMovement, "قوة القفز (Jump Power)", 50, 200, 100, function(v)
-	Settings.JumpPower = v;
-end);
-CreateToggle(TabMovement, "قفز لا نهائي (Inf Jump)", false, function(v)
-	Settings.InfJump = v;
-end);
-CreateToggle(TabMovement, "تشغيل الطيران (AirWalk)", false, function(v)
-	Settings.AirWalkToggle = v;
-	if (v and LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")) then
-		local FlatIdent_1A54 = 0;
-		local hrp;
-		while true do
-			if (0 == FlatIdent_1A54) then
-				hrp = LP.Character.HumanoidRootPart;
-				TargetAirWalkY = hrp.Position.Y + Settings.CustomHeightOffset;
-				FlatIdent_1A54 = 1;
-			end
-			if (FlatIdent_1A54 == 1) then
-				hrp.CFrame = CFrame.new(hrp.Position.X, TargetAirWalkY, hrp.Position.Z);
-				AirPlatform.Parent = workspace.CurrentCamera;
-				break;
-			end
-		end
-	else
-		AirPlatform.Parent = nil;
-	end
-end);
-CreateSlider(TabMovement, "ارتفاع الطيران (Height)", -200, 300, 50, function(v)
-	Settings.CustomHeightOffset = v;
-end);
-CreateToggle(TabCrazy, "اختراق الجدران (Noclip)", false, function(v)
-	Settings.Noclip = v;
-end);
-CreateToggle(TabCrazy, "الدوران (Spinbot)", false, function(v)
-	Settings.Spinbot = v;
-end);
-CreateSlider(TabCrazy, "سرعة الدوران", 10, 200, 50, function(v)
-	Settings.SpinSpeed = v;
-end);
-local InfoFrame1 = Instance.new("Frame", TabInfo);
-InfoFrame1.Size = UDim2.new(1, -10, 0, 80);
-InfoFrame1.BackgroundColor3 = Color3.fromRGB(25, 25, 40);
-Instance.new("UICorner", InfoFrame1).CornerRadius = UDim.new(0, 8);
-local WelcomeInfo = Instance.new("TextLabel", InfoFrame1);
-WelcomeInfo.Size = UDim2.new(0.95, 0, 1, 0);
-WelcomeInfo.Position = UDim2.new(0.025, 0, 0, 0);
-WelcomeInfo.BackgroundTransparency = 1;
-WelcomeInfo.Text = "🌟 مرحباً بك في AMY HUB V2 🌟\nأقوى سكربت حماية وتشخيصات في روبلوكس!\nاستمتع بالتجربة الآمنة والممتعة ❤️";
-WelcomeInfo.TextColor3 = Color3.fromRGB(255, 255, 255);
-WelcomeInfo.Font = Enum.Font.Gotham;
-WelcomeInfo.TextSize = 13;
-WelcomeInfo.TextWrapped = true;
-WelcomeInfo.TextYAlignment = Enum.TextYAlignment.Center;
-local InfoFrame2 = Instance.new("Frame", TabInfo);
-InfoFrame2.Size = UDim2.new(1, -10, 0, 100);
-InfoFrame2.Position = UDim2.new(0, 0, 0, 90);
-InfoFrame2.BackgroundColor3 = Color3.fromRGB(25, 25, 40);
-Instance.new("UICorner", InfoFrame2).CornerRadius = UDim.new(0, 8);
-local DevLabel = Instance.new("TextLabel", InfoFrame2);
-DevLabel.Size = UDim2.new(0.95, 0, 0, 30);
-DevLabel.Position = UDim2.new(0.025, 0, 0.05, 0);
-DevLabel.BackgroundTransparency = 1;
-DevLabel.Text = "👨‍💻 المطور: Adham_M_YT (Founder)";
-DevLabel.TextColor3 = Color3.fromRGB(0, 255, 200);
-DevLabel.Font = Enum.Font.GothamBold;
-DevLabel.TextSize = 14;
-DevLabel.TextXAlignment = Enum.TextXAlignment.Left;
-local AssistantLabel = Instance.new("TextLabel", InfoFrame2);
-AssistantLabel.Size = UDim2.new(0.95, 0, 0, 30);
-AssistantLabel.Position = UDim2.new(0.025, 0, 0.35, 0);
-AssistantLabel.BackgroundTransparency = 1;
-AssistantLabel.Text = "🤫 المساعد: AMY_1 (Tabbed Native UI)";
-AssistantLabel.TextColor3 = Color3.fromRGB(200, 200, 200);
-AssistantLabel.Font = Enum.Font.Gotham;
-AssistantLabel.TextSize = 13;
-AssistantLabel.TextXAlignment = Enum.TextXAlignment.Left;
-local UpdateLabel = Instance.new("TextLabel", InfoFrame2);
-UpdateLabel.Size = UDim2.new(0.95, 0, 0, 30);
-UpdateLabel.Position = UDim2.new(0.025, 0, 0.65, 0);
-UpdateLabel.BackgroundTransparency = 1;
-UpdateLabel.Text = "📅 آخر تحديث: " .. os.date("%Y/%m/%d - %H:%M");
-UpdateLabel.TextColor3 = Color3.fromRGB(200, 200, 200);
-UpdateLabel.Font = Enum.Font.Gotham;
-UpdateLabel.TextSize = 13;
-UpdateLabel.TextXAlignment = Enum.TextXAlignment.Left;
-task.spawn(function()
-	local FlatIdent_22216 = 0;
-	while true do
-		if (0 == FlatIdent_22216) then
-			wait(1);
-			ShowNotification("🎉 AMY HUB V2", "تم تشغيل السكربت بنجاح! استمتع يا " .. username .. " ❤️", 4, false);
-			break;
-		end
-	end
-end);
+    Settings.SafeMode = v
+    if v then
+        Settings.Noclip = false; Settings.EnableSpeed = false; 
+        Settings.Spinbot = false; Settings.AirWalkToggle = false
+        Settings.RealFly = false; Settings.Spectating = false
+        AirPlatform.Parent = nil
+        Camera.CameraSubject = LP.Character:FindFirstChild("Humanoid")
+    end
+end)
+
+-- Combat & Visuals
+CreateToggle(TabCombat, "Aimbot Main (الإيمبوت)", false, function(v) Settings.Aimbot = v end)
+CreateToggle(TabCombat, "Wall Check (فحص الجدران)", true, function(v) Settings.WallCheck = v end)
+CreateToggle(TabVisuals, "رادار الأعداء (ESP)", false, function(v) Settings.PlayerESP = v end)
+
+-- Movement Tab (تحديث السرعة والقفز بقوة الفيزياء)
+CreateToggle(TabMovement, "تفعيل السرعة (Physics Bypass)", false, function(v) Settings.EnableSpeed = v end)
+CreateSlider(TabMovement, "سرعة المشي الإجبارية", 16, 500, 50, function(v) Settings.WalkSpeed = v end)
+
+CreateToggle(TabMovement, "تفعيل القفز (Force Jump)", false, function(v) Settings.EnableJump = v end)
+CreateSlider(TabMovement, "قوة القفز الإجبارية", 50, 500, 100, function(v) Settings.JumpPower = v end)
+CreateToggle(TabMovement, "قفز لا نهائي (Inf Jump)", false, function(v) Settings.InfJump = v end)
+
+CreateToggle(TabMovement, "تشغيل طيران المنصة (قديم)", false, function(v)
+    Settings.AirWalkToggle = v
+    if v and LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
+        local hrp = LP.Character.HumanoidRootPart
+        TargetAirWalkY = hrp.Position.Y + Settings.CustomHeightOffset
+        hrp.CFrame = CFrame.new(hrp.Position.X, TargetAirWalkY, hrp.Position.Z)
+        AirPlatform.Parent = workspace.CurrentCamera
+    else
+        AirPlatform.Parent = nil
+    end
+end)
+
+CreateToggle(TabMovement, "تشغيل طيران حر (سريع)", false, function(v)
+    Settings.RealFly = v
+    if not v and LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
+        local bg = LP.Character.HumanoidRootPart:FindFirstChild("FlyBG")
+        local bv = LP.Character.HumanoidRootPart:FindFirstChild("FlyBV")
+        if bg then bg:Destroy() end
+        if bv then bv:Destroy() end
+        LP.Character.Humanoid.PlatformStand = false
+    end
+end)
+CreateSlider(TabMovement, "سرعة الطيران الحر", 10, 500, 100, function(v) Settings.FlySpeed = v end)
+
+-- [ التاب الجديد: Target & Fly ]
+local TargetStatus = CreateLabel(TabTarget, "الهدف الحالي: لا يوجد")
+
+CreateTextBox(TabTarget, "اكتب أول حرفين من اسم الضحية...", function(text)
+    local found = FindPlayerByString(text)
+    if found then
+        Settings.CurrentTarget = found
+        TargetStatus.Text = "الهدف الحالي: " .. found.Name
+    else
+        TargetStatus.Text = "الهدف الحالي: لم يتم العثور عليه!"
+        Settings.CurrentTarget = nil
+    end
+end)
+
+CreateButton(TabTarget, "1. انتقال ذكي للضحية (Tween)", function()
+    if Settings.CurrentTarget and Settings.CurrentTarget.Character and LP.Character then
+        local th = Settings.CurrentTarget.Character:FindFirstChild("HumanoidRootPart")
+        local mh = LP.Character:FindFirstChild("HumanoidRootPart")
+        if th and mh then
+            local dist = (th.Position - mh.Position).Magnitude
+            local t = TweenService:Create(mh, TweenInfo.new(dist / 100, Enum.EasingStyle.Linear), {CFrame = th.CFrame * CFrame.new(0, 0, 3)})
+            t:Play()
+        end
+    end
+end)
+
+CreateButton(TabTarget, "2. مشاهدة الضحية خفية (Spectate)", function()
+    Settings.Spectating = not Settings.Spectating
+    if Settings.Spectating and Settings.CurrentTarget and Settings.CurrentTarget.Character then
+        Camera.CameraSubject = Settings.CurrentTarget.Character:FindFirstChild("Humanoid")
+        if LP.Character then
+            for _, p in pairs(LP.Character:GetDescendants()) do
+                if p:IsA("BasePart") or p:IsA("Decal") then p.Transparency = 1 end
+            end
+        end
+    else
+        Settings.Spectating = false
+        if LP.Character then
+            Camera.CameraSubject = LP.Character:FindFirstChild("Humanoid")
+            for _, p in pairs(LP.Character:GetDescendants()) do
+                if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then p.Transparency = 0 end
+                if p:IsA("Decal") then p.Transparency = 0 end
+            end
+        end
+    end
+end)
+
+CreateButton(TabTarget, "3. استماع للصوت (Voice Chat)", function()
+    if Settings.CurrentTarget and Settings.CurrentTarget.Character then
+        Camera.CameraSubject = Settings.CurrentTarget.Character:FindFirstChild("Head")
+        TargetStatus.Text = "جاري الاستماع لـ: " .. Settings.CurrentTarget.Name
+    end
+end)
+
+CreateButton(TabTarget, "4. الجلوس فوق رأس الضحية", function()
+    Settings.SittingOnHead = not Settings.SittingOnHead
+    if not Settings.SittingOnHead then TargetStatus.Text = "تم إيقاف الجلوس." end
+end)
+
+CreateButton(TabTarget, "5. طيران وجلتشة الضحية (Fling)", function()
+    Settings.Flinging = not Settings.Flinging
+    if not Settings.Flinging and LP.Character then
+        local hrp = LP.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local bav = hrp:FindFirstChild("FlingBAV")
+            if bav then bav:Destroy() end
+        end
+    end
+end)
+
+CreateButton(TabTarget, "6. القتل بالجلتشة (Void Fling)", function()
+    if Settings.CurrentTarget and Settings.CurrentTarget.Character and LP.Character then
+        local hrp = LP.Character:FindFirstChild("HumanoidRootPart")
+        local thrp = Settings.CurrentTarget.Character:FindFirstChild("HumanoidRootPart")
+        if hrp and thrp then
+            local oldPos = hrp.CFrame
+            local bav = Instance.new("BodyAngularVelocity")
+            bav.AngularVelocity = Vector3.new(0, 999999, 0)
+            bav.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+            bav.Parent = hrp
+            
+            task.spawn(function()
+                for i = 1, 20 do
+                    if thrp then hrp.CFrame = thrp.CFrame end
+                    task.wait(0.05)
+                end
+                bav:Destroy()
+                hrp.CFrame = oldPos
+            end)
+        end
+    end
+end)
+
+-- Exploits Tab
+CreateToggle(TabCrazy, "اختراق الجدران (Noclip)", false, function(v) Settings.Noclip = v end)
+CreateToggle(TabCrazy, "الدوران (Spinbot)", false, function(v) Settings.Spinbot = v end)
+CreateSlider(TabCrazy, "سرعة الدوران", 10, 200, 50, function(v) Settings.SpinSpeed = v end)
+
+-- [ أنظمة التحكم المتقدمة وتخطي الحمايات ]
+local ControlKeys = {w = false, a = false, s = false, d = false}
+
 UserInputService.InputBegan:Connect(function(input, gpe)
-	local FlatIdent_DFF4 = 0;
-	while true do
-		if (FlatIdent_DFF4 == 0) then
-			if (not gpe and (input.UserInputType == Enum.UserInputType.MouseButton2)) then
-				Settings.IsAiming = true;
-			end
-			if (not gpe and (input.KeyCode == Enum.KeyCode.LeftControl)) then
-				MainFrame.Visible = not MainFrame.Visible;
-			end
-			break;
-		end
-	end
-end);
+    if not gpe and input.UserInputType == Enum.UserInputType.MouseButton2 then Settings.IsAiming = true end
+    if not gpe and input.KeyCode == Enum.KeyCode.LeftControl then MainFrame.Visible = not MainFrame.Visible end
+    if input.KeyCode == Enum.KeyCode.W then ControlKeys.w = true end
+    if input.KeyCode == Enum.KeyCode.A then ControlKeys.a = true end
+    if input.KeyCode == Enum.KeyCode.S then ControlKeys.s = true end
+    if input.KeyCode == Enum.KeyCode.D then ControlKeys.d = true end
+end)
+
 UserInputService.InputEnded:Connect(function(input, gpe)
-	if (input.UserInputType == Enum.UserInputType.MouseButton2) then
-		Settings.IsAiming = false;
-	end
-end);
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then Settings.IsAiming = false end
+    if input.KeyCode == Enum.KeyCode.W then ControlKeys.w = false end
+    if input.KeyCode == Enum.KeyCode.A then ControlKeys.a = false end
+    if input.KeyCode == Enum.KeyCode.S then ControlKeys.s = false end
+    if input.KeyCode == Enum.KeyCode.D then ControlKeys.d = false end
+end)
+
 RunService.Stepped:Connect(function()
-	pcall(function()
-		if (Settings.Noclip and not Settings.SafeMode and LP.Character) then
-			for _, part in pairs(LP.Character:GetDescendants()) do
-				if (part:IsA("BasePart") and part.CanCollide) then
-					part.CanCollide = false;
-				end
-			end
-		end
-	end);
-end);
+    pcall(function()
+        if Settings.Noclip and not Settings.SafeMode and LP.Character then
+            for _, part in pairs(LP.Character:GetDescendants()) do
+                if part:IsA("BasePart") and part.CanCollide then part.CanCollide = false end
+            end
+        end
+    end)
+end)
+
+-- [ نظام القفز الإجباري - Physics Jump Bypass ]
 UserInputService.JumpRequest:Connect(function()
-	pcall(function()
-		if (Settings.InfJump and LP.Character) then
-			LP.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping);
-		end
-	end);
-end);
+    pcall(function()
+        if not Settings.SafeMode and LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = LP.Character.HumanoidRootPart
+            local hum = LP.Character:FindFirstChildOfClass("Humanoid")
+            
+            if hum then
+                if Settings.EnableJump then
+                    -- إجبار الشخصية على الطيران لفوق باستخدام قوة الدفع (Velocity)
+                    hum:ChangeState(Enum.HumanoidStateType.Jumping)
+                    hrp.Velocity = Vector3.new(hrp.Velocity.X, Settings.JumpPower, hrp.Velocity.Z)
+                elseif Settings.InfJump then
+                    hum:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end
+        end
+    end)
+end)
+
+-- [ القلب النابض للسكربت - معالجة السرعة، الطيران، والميزات التلقائية ]
 RunService.Heartbeat:Connect(function()
-	pcall(function()
-		local FlatIdent_7DFA5 = 0;
-		local hrp;
-		local hum;
-		while true do
-			if (FlatIdent_7DFA5 == 1) then
-				hum = LP.Character:FindFirstChildOfClass("Humanoid");
-				if hum then
-					local FlatIdent_1FC27 = 0;
-					while true do
-						if (FlatIdent_1FC27 == 0) then
-							if (Settings.EnableSpeed and not Settings.SafeMode) then
-								hum.WalkSpeed = Settings.WalkSpeed;
-							end
-							if Settings.EnableJump then
-								hum.UseJumpPower = true;
-								hum.JumpPower = Settings.JumpPower;
-							end
-							break;
-						end
-					end
-				end
-				FlatIdent_7DFA5 = 2;
-			end
-			if (FlatIdent_7DFA5 == 2) then
-				if (Settings.Spinbot and not Settings.SafeMode) then
-					hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(Settings.SpinSpeed), 0);
-				end
-				if (Settings.AirWalkToggle and not Settings.SafeMode and (AirPlatform.Parent == workspace.CurrentCamera)) then
-					local FlatIdent_691EB = 0;
-					while true do
-						if (FlatIdent_691EB == 0) then
-							AirPlatform.Position = Vector3.new(hrp.Position.X, TargetAirWalkY - 3.5, hrp.Position.Z);
-							hrp.CFrame = CFrame.new(hrp.Position.X, TargetAirWalkY, hrp.Position.Z);
-							break;
-						end
-					end
-				end
-				break;
-			end
-			if (FlatIdent_7DFA5 == 0) then
-				if (not LP.Character or not LP.Character:FindFirstChild("HumanoidRootPart")) then
-					return;
-				end
-				hrp = LP.Character.HumanoidRootPart;
-				FlatIdent_7DFA5 = 1;
-			end
-		end
-	end);
-end);
-LP.CharacterAdded:Connect(function()
-	local FlatIdent_3B7E2 = 0;
-	while true do
-		if (FlatIdent_3B7E2 == 0) then
-			Settings.AirWalkToggle = false;
-			AirPlatform.Parent = nil;
-			break;
-		end
-	end
-end);
+    pcall(function()
+        if not LP.Character or not LP.Character:FindFirstChild("HumanoidRootPart") then return end
+        local hrp = LP.Character.HumanoidRootPart
+        local hum = LP.Character:FindFirstChildOfClass("Humanoid")
+        
+        -- [ نظام السرعة الإجباري - Physics Speed Bypass ]
+        if hum and not Settings.SafeMode and not Settings.RealFly then
+            if Settings.EnableSpeed then
+                local moveDir = hum.MoveDirection
+                if moveDir.Magnitude > 0 then
+                    -- بيحسب اتجاه مشي اللاعب ويديله سرعة قوية في نفس الاتجاه مع الحفاظ على الجاذبية
+                    hrp.Velocity = Vector3.new(moveDir.X * Settings.WalkSpeed, hrp.Velocity.Y, moveDir.Z * Settings.WalkSpeed)
+                end
+            end
+        end
+        
+        -- الطيران الحر الحقيقي (Real Fly)
+        if Settings.RealFly and not Settings.SafeMode then
+            hum.PlatformStand = true
+            local bg = hrp:FindFirstChild("FlyBG") or Instance.new("BodyGyro", hrp)
+            bg.Name = "FlyBG"
+            bg.P = 90000
+            bg.MaxTorque = Vector3.new(90000, 90000, 90000)
+            bg.CFrame = Camera.CFrame
+            
+            local bv = hrp:FindFirstChild("FlyBV") or Instance.new("BodyVelocity", hrp)
+            bv.Name = "FlyBV"
+            bv.Velocity = Vector3.new(0, 0, 0)
+            bv.MaxForce = Vector3.new(90000, 90000, 90000)
+            
+            local moveDir = Vector3.new(0,0,0)
+            if ControlKeys.w then moveDir = moveDir + Camera.CFrame.LookVector end
+            if ControlKeys.s then moveDir = moveDir - Camera.CFrame.LookVector end
+            if ControlKeys.a then moveDir = moveDir - Camera.CFrame.RightVector end
+            if ControlKeys.d then moveDir = moveDir + Camera.CFrame.RightVector end
+            
+            if moveDir.Magnitude > 0 then
+                bv.Velocity = moveDir.Unit * Settings.FlySpeed
+            else
+                bv.Velocity = Vector3.new(0,0,0)
+            end
+        end
+
+        if Settings.Spinbot and not Settings.SafeMode then 
+            hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(Settings.SpinSpeed), 0) 
+        end
+        
+        if Settings.AirWalkToggle and not Settings.SafeMode and AirPlatform.Parent == workspace.CurrentCamera then
+            AirPlatform.Position = Vector3.new(hrp.Position.X, TargetAirWalkY - 3.5, hrp.Position.Z)
+            hrp.CFrame = CFrame.new(hrp.Position.X, TargetAirWalkY, hrp.Position.Z)
+        end
+
+        -- ميزة الجلوس على رأس الضحية
+        if Settings.SittingOnHead and Settings.CurrentTarget and Settings.CurrentTarget.Character then
+            local targetHead = Settings.CurrentTarget.Character:FindFirstChild("Head")
+            if targetHead then
+                hrp.CFrame = targetHead.CFrame * CFrame.new(0, 2, 0)
+            end
+        end
+        
+        -- ميزة الجلتشة والطيران بالضحية المستمر
+        if Settings.Flinging and Settings.CurrentTarget and Settings.CurrentTarget.Character then
+            local thrp = Settings.CurrentTarget.Character:FindFirstChild("HumanoidRootPart")
+            if thrp then
+                local bav = hrp:FindFirstChild("FlingBAV") or Instance.new("BodyAngularVelocity", hrp)
+                bav.Name = "FlingBAV"
+                bav.AngularVelocity = Vector3.new(0, 50000, 0)
+                bav.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+                hrp.CFrame = thrp.CFrame
+            end
+        end
+    end)
+end)
+
+LP.CharacterAdded:Connect(function() 
+    Settings.AirWalkToggle = false 
+    Settings.RealFly = false
+    Settings.SittingOnHead = false
+    Settings.Flinging = false
+    AirPlatform.Parent = nil 
+end)
+
+-- [ نظام الإيمبوت والرادار ]
 RunService.RenderStepped:Connect(function()
-	local allTargets = GetValidTargets();
-	for _, t in pairs(allTargets) do
-		pcall(function()
-			local FlatIdent_1013A = 0;
-			local char;
-			local hrp;
-			while true do
-				if (0 == FlatIdent_1013A) then
-					char = t.Character;
-					hrp = char:FindFirstChild("HumanoidRootPart");
-					FlatIdent_1013A = 1;
-				end
-				if (FlatIdent_1013A == 1) then
-					if (hrp and (char.Humanoid.Health > 0) and Settings.PlayerESP) then
-						CreateGunSlayerESP(hrp, t.Name, Settings.EnemyHitboxColor);
-					end
-					break;
-				end
-			end
-		end);
-	end
-	if (Settings.Aimbot and Settings.IsAiming) then
-		local targetHead, dist = nil, math.huge;
-		for _, t in pairs(allTargets) do
-			pcall(function()
-				local char = t.Character;
-				local head = char:FindFirstChild("Head") or char:FindFirstChild("HumanoidRootPart");
-				if (head and (char.Humanoid.Health > 0)) then
-					local FlatIdent_2E34E = 0;
-					local screenPos;
-					local onScreen;
-					while true do
-						if (FlatIdent_2E34E == 0) then
-							screenPos, onScreen = Camera:WorldToViewportPoint(head.Position);
-							if onScreen then
-								local FlatIdent_2A9F7 = 0;
-								local isVisible;
-								while true do
-									if (FlatIdent_2A9F7 == 0) then
-										isVisible = true;
-										if Settings.WallCheck then
-											local rayParams = RaycastParams.new();
-											rayParams.FilterDescendantsInstances = {LP.Character,AirPlatform};
-											rayParams.FilterType = Enum.RaycastFilterType.Exclude;
-											local rayResult = workspace:Raycast(Camera.CFrame.Position, head.Position - Camera.CFrame.Position, rayParams);
-											if (rayResult and not rayResult.Instance:IsDescendantOf(char)) then
-												isVisible = false;
-											end
-										end
-										FlatIdent_2A9F7 = 1;
-									end
-									if (FlatIdent_2A9F7 == 1) then
-										if isVisible then
-											local FlatIdent_6AEED = 0;
-											local screenCenter;
-											local distance;
-											while true do
-												if (FlatIdent_6AEED == 0) then
-													screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2);
-													distance = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Magnitude;
-													FlatIdent_6AEED = 1;
-												end
-												if (FlatIdent_6AEED == 1) then
-													if (distance < dist) then
-														local FlatIdent_44265 = 0;
-														while true do
-															if (0 == FlatIdent_44265) then
-																dist = distance;
-																targetHead = head.Position;
-																break;
-															end
-														end
-													end
-													break;
-												end
-											end
-										end
-										break;
-									end
-								end
-							end
-							break;
-						end
-					end
-				end
-			end);
-		end
-		if targetHead then
-			Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, targetHead);
-		end
-	end
-end);
+    local allTargets = GetValidTargets()
+    for _, t in pairs(allTargets) do
+        pcall(function()
+            local char = t.Character
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp and char.Humanoid.Health > 0 and Settings.PlayerESP then
+                CreateGunSlayerESP(hrp, t.Name, ThemeColor)
+            end
+        end)
+    end
+    
+    if Settings.Aimbot and Settings.IsAiming and not Settings.SafeMode then
+        local targetHead, dist = nil, math.huge
+        for _, t in pairs(allTargets) do
+            pcall(function()
+                local char = t.Character
+                local head = char:FindFirstChild("Head") or char:FindFirstChild("HumanoidRootPart")
+                if head and char.Humanoid.Health > 0 then
+                    local screenPos, onScreen = Camera:WorldToViewportPoint(head.Position)
+                    if onScreen then
+                        local isVisible = true
+                        if Settings.WallCheck then
+                            local rayParams = RaycastParams.new()
+                            rayParams.FilterDescendantsInstances = {LP.Character, AirPlatform}
+                            rayParams.FilterType = Enum.RaycastFilterType.Exclude
+                            local rayResult = workspace:Raycast(Camera.CFrame.Position, head.Position - Camera.CFrame.Position, rayParams)
+                            if rayResult and not rayResult.Instance:IsDescendantOf(char) then isVisible = false end
+                        end
+                        if isVisible then
+                            local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+                            local distance = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Magnitude
+                            if distance < dist then dist = distance; targetHead = head.Position end
+                        end
+                    end
+                end
+            end)
+        end
+        if targetHead then Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, targetHead) end
+    end
+end)
